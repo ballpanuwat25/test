@@ -1,0 +1,59 @@
+services:
+  react-app:
+    image: node:18-alpine
+    container_name: react-app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    working_dir: /app
+    volumes:
+      - ./numer_frontend/:/app
+      - /app/node_modules
+    ports:
+      - '3000:3000'
+    command: sh -c "npm install && npx nodemon --watch src --exec 'npm start'"
+
+  node-server:
+    image: node:18-alpine # ใช้ Node.js image สำหรับ node-server
+    container_name: node-server
+    working_dir: /app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./numer_backend/:/app # Mount โค้ดของ node-server
+      - /app/node_modules
+    ports:
+      - "8000:8000"
+    command: sh -c "npm install && npx nodemon --watch ./ --exec 'npm start' --exitcrash"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:latest
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Numerical
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes' # Optional: Only if you want to allow empty passwords
+      MYSQL_INITDB_SKIP_TZINFO: 'true' # Optional: Skip timezone info
+      MYSQL_DEFAULT_AUTHENTICATION_PLUGIN: mysql_native_password # Use environment variable instead
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_test:/var/lib/mysql
+
+volumes:
+  mysql_data_test:
+    driver: local
